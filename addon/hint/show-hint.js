@@ -2,10 +2,13 @@ CodeMirror.showHint = function(cm, getHints, options) {
   if (!options) options = {};
   var startCh = cm.getCursor().ch, continued = false;
   var closeOn = options.closeCharacters || /[\s()\[\]{};:]/;
-
+  var closeWhenSomethingSelected =
+      options.closeWhenSomethingSelected === undefined ?
+      true : options.closeWhenSomethingSelected;
   function startHinting() {
-    // We want a single cursor position.
-    if (cm.somethingSelected()) return;
+    // Return if we want a single cursor position.
+    if (closeWhenSomethingSelected &&
+        cm.somethingSelected()) return;
 
     if (options.async)
       getHints(cm, showHints, options);
@@ -137,7 +140,13 @@ CodeMirror.showHint = function(cm, getHints, options) {
     });
     CodeMirror.on(hints, "click", function(e) {
       var t = e.target || e.srcElement;
-      if (t.hintId != null) changeActive(t.hintId);
+      if (t.hintId != null) {
+        if (options.pickOnClick) {
+          selectedHint = t.hintId; pick();
+        } else {
+          changeActive(t.hintId);
+        }
+      }
     });
     CodeMirror.on(hints, "mousedown", function() {
       setTimeout(function(){cm.focus();}, 20);
